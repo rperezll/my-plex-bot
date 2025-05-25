@@ -1,0 +1,7 @@
+services:
+  my-plex-bot:
+    build: .
+    container_name: my-plex-bot
+    restart: unless-stopped
+    env_file:
+      - .env
