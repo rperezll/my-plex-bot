@@ -24,3 +24,18 @@ docker compose up -d
 ```
 
 ---
+
+## Environments
+
+Antes de ejecutar el bot, crea un archivo llamado `.env` en la raíz del proyecto con el siguiente contenido:
+
+```env
+# Token del bot de Telegram, generado con BotFather
+BOT_TOKEN=tu_token_de_telegram
+
+# Token de Plex (X-Plex-Token)
+PLEX_TOKEN=tu_token_de_plex
+
+# URL base de tu servidor Plex (recomendado: *.plex.direct con certificado HTTPS)
+PLEX_URL=https://tu-servidor.plex.direct:32400
+```
