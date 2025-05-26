@@ -1,0 +1,7 @@
+services:
+  my-plex-bot:
+    image: ghcr.io/rperezll/my-plex-bot:latest
+    container_name: my-plex-bot
+    restart: unless-stopped
+    env_file:
+      - .env

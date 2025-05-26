@@ -16,11 +16,17 @@ Bot de Telegram para controlar tu servidor de **Plex**, hecho en **TypeScript** 
 
 ## Docker
 
-El proyecto incluye un `docker-compose.yml` que construye y ejecuta la app en producción.  
+El proyecto incluye un archivo `local-compose.yml` que se encarga de construir y ejecutar la aplicación en **entorno local**, y otro archivo `prod-compose.yml` que ejecuta el bot en **producción** utilizando la imagen publicada con la etiqueta `latest`.
 Solo necesitas tener un archivo `.env` en la raíz con la configuración.
 
 ```bash
-docker compose up -d
+# Modo local
+docker compose -f local-compose.yml up -d
+```
+
+```bash
+# Modo producción
+docker compose -f prod-compose.yml up -d
 ```
 
 ---
@@ -38,4 +44,10 @@ PLEX_TOKEN=tu_token_de_plex
 
 # URL base de tu servidor Plex (recomendado: *.plex.direct con certificado HTTPS)
 PLEX_URL=https://tu-servidor.plex.direct:32400
+
+# Hora de encendido del servidor Plex
+PLEX_ON_TIME=15:00h
+
+# Hora de apagado del servidor Plex
+PLEX_OFF_TIME=23:00h
 ```
