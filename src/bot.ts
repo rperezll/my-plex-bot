@@ -4,6 +4,7 @@ import {
   getPlexServerStatus,
   getPlexSearch,
   getPlexActiveUsers,
+  // checkForNewContent,
 } from './plex-api';
 
 import { message } from 'telegraf/filters';
@@ -18,6 +19,7 @@ bot.telegram.setMyCommands([
   { command: 'status', description: '🤔 Plex está encendido?' },
   { command: 'users', description: '👨‍👩‍👧‍👦 Usuarios conectados' },
   { command: 'schedules', description: '📆 Horarios' },
+  // { command: 'test', description: 'test' },
 ]);
 
 bot.start((ctx) => {
@@ -42,25 +44,24 @@ bot.start((ctx) => {
 });
 
 bot.command('status', async (ctx) => {
-  try {
-    const status = await getPlexServerStatus();
+  const status = await getPlexServerStatus();
 
-    if (!status.success) {
-      await ctx.reply(`❌ ${status.log!}`);
-    }
-
-    await ctx.reply(`✅ ${status.log!}`);
-  } catch (error) {
-    console.error('Error al obtener status de Plex:', error);
-    await ctx.reply(
-      '❌ No se pudo conectar con el servidor Plex. Puede estar apagado o inaccesible.'
-    );
+  if (!status.success) {
+    return await ctx.reply(`❌ ${status.log!}`);
   }
+
+  return await ctx.reply(`✅ ${status.log!}`);
 });
 
 bot.command('schedules', async (ctx) => {
-  await ctx.reply('El horario de funcionamiento es de 14:00h a 1:00h');
+  await ctx.reply(
+    `El horario de funcionamiento es de ${process.env.PLEX_ON_TIME} a ${process.env.PLEX_OFF_TIME}`
+  );
 });
+
+// bot.command('test', async (ctx) => {
+//   checkForNewContent();
+// });
 
 bot.command('users', async (ctx) => {
   const result = await getPlexActiveUsers();
