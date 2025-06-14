@@ -40,7 +40,7 @@ Antes de ejecutar el bot, crea un archivo llamado `.env` en la raíz del proyect
 BOT_TOKEN=tu_token_de_telegram
 
 # Token de Tautulli API
-TAUTULLI_TOKEN=tu_token_de_plex
+TAUTULLI_TOKEN=<TAUTULLI_TOKEN>
 
 # URL base de tu instancia de Tautulli
 TAUTULLI_URL=http://<IP>:<PORT>
