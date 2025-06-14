@@ -1,4 +1,4 @@
-name: Build and Push Docker Image (On Demand with Version)
+name: Build and Push Docker Image (On Demand with Version + Latest)
 
 on:
   workflow_dispatch:

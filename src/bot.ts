@@ -2,14 +2,18 @@ import 'dotenv/config';
 import { Telegraf, Markup } from 'telegraf';
 import {
   getPlexServerStatus,
-  getPlexSearch,
   getPlexActiveUsers,
-  // checkForNewContent,
-} from './plex-api';
+  getPlexSearch,
+} from './tautulli-api';
 
 import { message } from 'telegraf/filters';
+import { getEnvs } from './env-config';
+import { Logger } from './logger';
 
-const bot = new Telegraf(process.env.BOT_TOKEN!);
+// Validación de variables de entorno
+getEnvs();
+
+const bot = new Telegraf(getEnvs().BOT_TOKEN);
 
 const userSearchState = new Map<number, boolean>();
 
@@ -19,7 +23,6 @@ bot.telegram.setMyCommands([
   { command: 'status', description: '🤔 Plex está encendido?' },
   { command: 'users', description: '👨‍👩‍👧‍👦 Usuarios conectados' },
   { command: 'schedules', description: '📆 Horarios' },
-  // { command: 'test', description: 'test' },
 ]);
 
 bot.start((ctx) => {
@@ -31,7 +34,7 @@ bot.start((ctx) => {
       parse_mode: 'HTML',
       ...Markup.inlineKeyboard([
         Markup.button.url(
-          '📚 Repositorio',
+          '📚 Documentación',
           'https://github.com/rperezll/my-plex-bot'
         ),
         Markup.button.url(
@@ -54,14 +57,10 @@ bot.command('status', async (ctx) => {
 });
 
 bot.command('schedules', async (ctx) => {
-  await ctx.reply(
-    `El horario de funcionamiento es de ${process.env.PLEX_ON_TIME} a ${process.env.PLEX_OFF_TIME}`
+  await ctx.replyWithHTML(
+    `🕑 El horario de funcionamiento es de <b>${getEnvs().PLEX_ON_TIME}</b> a <b>${getEnvs().PLEX_OFF_TIME}</b>.`
   );
 });
-
-// bot.command('test', async (ctx) => {
-//   checkForNewContent();
-// });
 
 bot.command('users', async (ctx) => {
   const result = await getPlexActiveUsers();
@@ -70,21 +69,34 @@ bot.command('users', async (ctx) => {
     return ctx.reply(result.log!);
   }
 
-  if (!result.success) {
-    return ctx.reply(result.log!);
+  const users = result.users ?? [];
+
+  if (users.length === 0) {
+    return ctx.replyWithHTML(`<b>No hay usuarios activos en este momento.</b>`);
   }
 
-  const message = result.users
-    ?.map(
-      (u) =>
-        `👤 <b>${u.user}</b>\n - Viendo: ${u.title} (${u.type})\n - Plataforma: ${u.platform}\n - Estado: ${u.state}`
-    )
-    .join('\n\n');
+  const usersHTML = users
+    .map((user) => {
+      return (
+        `<b>${user.username}</b>\n` +
+        `${user.content ? ` <i>Contenido:</i> ${user.content}\n` : ''}` +
+        `${user.product ? ` <i>Dispositivo:</i> ${user.product}\n` : ''}`
+      );
+    })
+    .join('\n');
 
-  await ctx.replyWithHTML(`<b>${result.log}</b>\n\n${message}`);
+  await ctx.replyWithHTML(
+    `<b>📺 Usuarios activos en este momento:</b>\n\n${usersHTML}`
+  );
 });
 
 bot.command('search', async (ctx) => {
+  const status = await getPlexServerStatus();
+
+  if (!status.success) {
+    await ctx.reply(status.log!);
+  }
+
   const userId = ctx.from?.id;
   if (!userId) return;
 
@@ -93,6 +105,7 @@ bot.command('search', async (ctx) => {
   await ctx.reply('🔎 Escribe el nombre del contenido que deseas buscar:');
 });
 
+// Evento para capturar las respuestas del usuario al comando 'search'
 bot.on(message('text'), async (ctx) => {
   const userId = ctx.from?.id;
 
@@ -105,26 +118,31 @@ bot.on(message('text'), async (ctx) => {
     const search = await getPlexSearch(query);
 
     if (!search.success || !search.content || search.content.length === 0) {
-      return ctx.reply(`🙅 No tengo nada parecido a <b>${query}</b>`, {
+      return ctx.reply(`🙅 No tengo nada parecido a <b>${query}</b>.`, {
         parse_mode: 'HTML',
       });
     }
 
-    ctx.reply('He encontrado lo siguiente:');
+    await ctx.reply('<b>He encontrado lo siguiente:</b>', {
+      parse_mode: 'HTML',
+    });
 
     for (const item of search.content) {
-      const caption =
-        `🎬 <b>${item.title}</b>\n(${item.year})\n⭐ Rating: ${item.rating}`.trim();
+      const caption = `🎬 <b>${item.title}</b>\n📅 Año: ${item.year}\n⭐ Rating: ${item.rating}\n📺 Tipo: ${item.type}`;
 
-      await ctx.replyWithPhoto(
-        { source: item.poster! },
-        { caption, parse_mode: 'HTML' }
-      );
+      if (item.poster) {
+        await ctx.replyWithPhoto(
+          { source: item.poster },
+          { caption, parse_mode: 'HTML' }
+        );
+      } else {
+        await ctx.replyWithHTML(caption);
+      }
     }
   } else {
     ctx.reply('😢 No puedo entenderte.');
   }
 });
 
-bot.launch();
-console.log('🤖 Bot en marcha...');
+await bot.launch();
+Logger.system('🤖 Bot ejecutandose...');
