@@ -1,5 +1,4 @@
-import { parseStringPromise } from 'xml2js';
-import { getLastSeenId, setLastSeenId } from './db/functions';
+// Legacy code for interacting with Plex API (actually not working, but kept for reference)
 
 type PlexSearchResult = {
   success: boolean;
@@ -164,90 +163,5 @@ export const getPlexActiveUsers = async (): Promise<PlexActiveUser> => {
       success: false,
       log: '❌ No se pudieron obtener las sesiones activas.',
     };
-  }
-};
-
-const getLibrarySections = async (): Promise<any> => {
-  const response = await fetch(`${process.env.PLEX_URL!}/library/sections`, {
-    headers: {
-      'X-Plex-Token': process.env.PLEX_TOKEN!,
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error(`Error ${response.status}: ${response.statusText}`);
-  }
-
-  const xml = await response.text();
-  const parsed = await parseStringPromise(xml, { explicitArray: false });
-
-  const directories = parsed.MediaContainer.Directory;
-
-  // Asegurar que sea siempre un array
-  const libraries = Array.isArray(directories) ? directories : [directories];
-
-  const result = libraries.map((dir: any) => ({
-    key: parseInt(dir.$.key, 10),
-    title: dir.$.title,
-    type: dir.$.type,
-  }));
-
-  console.log(result);
-
-  return result;
-};
-
-const getRecentlyAdded = async (
-  sectionKey: number
-): Promise<{ id: number; title: string; type: string; addedAt: number }[]> => {
-  const response = await fetch(
-    `${process.env.PLEX_URL!}/library/sections/${sectionKey}/all`,
-    {
-      headers: {
-        'X-Plex-Token': process.env.PLEX_TOKEN!,
-      },
-    }
-  );
-
-  if (!response.ok) {
-    throw new Error(`Error ${response.status}: ${response.statusText}`);
-  }
-
-  const xml = await response.text();
-  const parsed = await parseStringPromise(xml, { explicitArray: false });
-
-  console.log(parsed);
-
-  const items = parsed.MediaContainer.Metadata ?? [];
-
-  const mediaItems = Array.isArray(items) ? items : [items];
-
-  return mediaItems.map((item: any) => ({
-    id: parseInt(item.ratingKey, 10),
-    title: item.title,
-    type: item.type,
-    addedAt: parseInt(item.addedAt ?? 0, 10),
-  }));
-};
-
-export const checkForNewContent = async () => {
-  const sections = await getLibrarySections();
-
-  for (const section of sections) {
-    const lastSeen = getLastSeenId(section.key);
-    const items = await getRecentlyAdded(section.key);
-
-    const newItems = items.filter((item) => item.id > lastSeen);
-
-    if (newItems.length) {
-      const maxId = Math.max(...newItems.map((i) => i.id));
-      setLastSeenId(section.key, maxId);
-
-      console.log(`🆕 Novedades en "${section.title}":`);
-      for (const item of newItems) {
-        console.log(` - ${item.title} (${item.type})`);
-        // Aquí podrías enviar un mensaje a Telegram, Discord, etc.
-      }
-    }
   }
 };
