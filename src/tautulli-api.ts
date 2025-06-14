@@ -9,7 +9,7 @@ interface PlexSearchResult {
     year: string;
     rating: string;
     type: string;
-    poster?: Buffer;
+    poster: Buffer | null;
   }[];
 }
 
@@ -140,12 +140,32 @@ export const getPlexSearch = async (
 
         if (!Array.isArray(data) || data.length === 0) return [];
 
-        return data.map((item: any) => ({
-          title: item.title,
-          year: item.year || 'N/A',
-          rating: item.rating || 'N/A',
-          type: item.section_type || 'N/A',
-        }));
+        return await Promise.all(
+          data.map(async (item: any) => {
+            let posterBuffer = null;
+            if (item.thumb) {
+              const assetUrl = `${baseUrl}?apikey=${token}&cmd=pms_image_proxy&img=${item.thumb}&width=300&height=450`;
+
+              const assetResponse = await fetch(assetUrl);
+              if (assetResponse.ok) {
+                const arrayBuffer = await assetResponse.arrayBuffer();
+                posterBuffer = Buffer.from(arrayBuffer);
+              } else {
+                Logger.warn(
+                  `No se ha podido descargar el poster del contenido.`
+                );
+              }
+            }
+
+            return {
+              title: item.title,
+              year: item.year || 'N/A',
+              rating: item.rating || 'N/A',
+              type: item.section_type || 'N/A',
+              poster: posterBuffer,
+            };
+          })
+        );
       })
     );
 

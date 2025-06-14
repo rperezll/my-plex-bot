@@ -8,6 +8,7 @@ import {
 
 import { message } from 'telegraf/filters';
 import { getEnvs } from './env-config';
+import { Logger } from './logger';
 
 // Validación de variables de entorno
 getEnvs();
@@ -122,15 +123,26 @@ bot.on(message('text'), async (ctx) => {
       });
     }
 
-    let caption = '<b>He encontrado lo siguiente:</b>';
+    await ctx.reply('<b>He encontrado lo siguiente:</b>', {
+      parse_mode: 'HTML',
+    });
+
     for (const item of search.content) {
-      caption += `\n\n🎬 <b>${item.title}</b>\n📅 Año: ${item.year}\n⭐ Rating: ${item.rating}\n📺 Tipo: ${item.type}`;
+      const caption = `🎬 <b>${item.title}</b>\n📅 Año: ${item.year}\n⭐ Rating: ${item.rating}\n📺 Tipo: ${item.type}`;
+
+      if (item.poster) {
+        await ctx.replyWithPhoto(
+          { source: item.poster },
+          { caption, parse_mode: 'HTML' }
+        );
+      } else {
+        await ctx.replyWithHTML(caption);
+      }
     }
-    await ctx.replyWithHTML(caption);
   } else {
     ctx.reply('😢 No puedo entenderte.');
   }
 });
 
-bot.launch();
-console.log('🤖 Bot en marcha...');
+await bot.launch();
+Logger.system('🤖 Bot ejecutandose...');
