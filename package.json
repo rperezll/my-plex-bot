@@ -1,7 +1,7 @@
 {
   "name": "my-plex-bot",
-  "version": "1.0.0",
-  "description": "Bot de Telegram para gestionar e interactuar con tu servidor multimedia Plex, construido con TypeScript y Telegraf.",
+  "version": "2.0.0-beta",
+  "description": "Bot de Telegram para gestionar e interactuar con tu servidor multimedia Plex + Tautulli, construido con TypeScript y Telegraf.",
   "main": "index.js",
   "type": "module",
   "scripts": {
@@ -30,15 +30,11 @@
   },
   "homepage": "https://github.com/rperezll/my-plex-bot",
   "dependencies": {
-    "better-sqlite3": "11.10.0",
     "dotenv": "16.5.0",
-    "telegraf": "4.16.3",
-    "xml2js": "0.6.2"
+    "telegraf": "4.16.3"
   },
   "devDependencies": {
-    "@types/better-sqlite3": "7.6.13",
     "@types/node": "22.15.21",
-    "@types/xml2js": "0.4.14",
     "@typescript-eslint/eslint-plugin": "8.32.1",
     "@typescript-eslint/parser": "8.32.1",
     "eslint": "9.27.0",
